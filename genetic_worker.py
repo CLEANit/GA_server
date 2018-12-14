@@ -1,7 +1,7 @@
 import numpy as np
 import gym
 import gym.spaces
-from reactive control import rc_gym
+from reactive_control import rc_gym
 from pymongo import MongoClient
 from time import sleep
 import datetime
@@ -95,7 +95,7 @@ while n_delete < 1:
     delete = unfinished_table.posts.delete_one(policy)
     n_delete = delete.deleted_count
 
-game = '2h2o-v0'
+game = 'Pendulum-v0'
 env = gym.make(game)
 s = env.reset()
 shape = s.shape[0]
