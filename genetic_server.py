@@ -7,7 +7,7 @@ import datetime
 if not os.path.exists('./champions'):
     os.makedirs('./champions')
 
-n_gen = 100                         # Number of generations
+n_gen = 10                          # Number of generations
 n_pop = 20                          # Starting population
 n_mutate = 10                       # Number of mutations per generation
 n_sacrifice = 10                    # Number of removals per generation
@@ -17,6 +17,7 @@ restart = False                     # Restart from last completed generation
 wins = 100                          # Wins required for champion to be considered winner
 t_max = 600                         # Number of seconds before a policy in the working on table expires 
 n_avg = 5                           # Number of times each policy is evaluated
+game = '2h2o-v0'                    # Game the workers will be playing
 db_name = '2h2o'                    # Name of database to use
 db_loc = 'coombs.science.uoit.ca'   # Location of MongoDB instance
 db_port = 2507                      # Port for MongoDB instance
@@ -41,25 +42,71 @@ elif n_sacrifice >= n_pop - 1:
     print ('Sacrifice too large. n_sacrifice lowered to ' + str(n_sacrifice))
 
 population = []
-if restart:
-    prev_pop = backup_table.posts.find()
-    gen = prev_pop[0]['gen']
-    for policy in prev_pop:
-        population.append({'seeds': policy['seeds']})
-    if len(population) < n_pop:
-        for i in range(n_pop - len(population)):
-            population.append({'seeds': [np.random.randint(int(1e9))]})
+n_backup = backup_table.posts.count_documents({})
+if restart and n_backup <= n_pop:
+    n_finished = finished_table.posts.count_documents({})
+    n_unfinished = unfinished_table.posts.count_documents({})
+    n_working = working_table.posts.count_documents({})
+    if (n_pop * n_avg) == (n_finished + n_working + n_unfinished):
+        print('Restarting from last calculation...')
+        policy = finished_table.posts.find_one()
+        if policy == None:
+            policy = unfinished_table.posts.find_one()
+        if policy == None:
+            policy = working_table.posts.find_one()
+        gen = policy['gen']
+    else:
+        print('Previous population size does not match current population size...')
+        print('Restarting from last back-up.')
+        delete = finished_table.posts.delete_many({})
+        delete = unfinished_table.posts.delete_many({})
+        delete = working_table.posts.delete_many({})
+        population = backup_table.posts.find()
+        gen = population[0]['gen']
+        name = 0
+        for policy in population:
+            for i in range(n_avg):
+                new_policy = {'gen': gen, 'name': name, 'id': i, 'seeds': policy['seeds']}
+                unfinished_table.posts.insert_one(new_policy)
+            name += 1
+        if n_backup < n_pop:
+            for j in range(n_pop - len(population)):
+                for i in range(n_avg):
+                    new_policy = {'gen': gen, 'name': name, 'id': i, 'seeds': [np.random.randint(int(1e9))]}
+                    unfinished_table.posts.insert_one(new_policy)
+            name += 1
+
 elif load:
+    delete = finished_table.posts.delete_many({})
+    delete = unfinished_table.posts.delete_many({})
+    delete = working_table.posts.delete_many({})
+    delete = backup_table.posts.delete_many({})
     gen = load_gen
     data = np.load('./champions/' + game + '_' + str(gen) + '.npz')
-    population.append(data['seeds'])
-    print ('Loading previous champion...')
-    for i in range(n_pop - 1):
-        population.append({'seeds': [np.random.randint(int(1e9))]})
+    print('Loading previous champion...')
+    for i in range(n_avg):
+        new_policy = {'gen': gen, 'name': 0, 'id': i, 'seeds': data['seeds']}
+        unfinished_table.posts.insert_one(new_policy)
+
+    name = 1
+    for j in range(n_pop - 1):
+        for i in range(n_avg):
+            new_policy = {'gen': gen, 'name': name, 'id': i, 'seeds': [np.random.randint(int(1e9))]}
+            unfinished_table.posts.insert_one(new_policy)
+        name += 1
+
 else:
+    delete = finished_table.posts.delete_many({})
+    delete = unfinished_table.posts.delete_many({})
+    delete = working_table.posts.delete_many({})
+    delete = backup_table.posts.delete_many({})
     gen = 0
-    for i in range(n_pop):
-        population.append({'seeds': [np.random.randint(int(1e9))]})
+    name = 0
+    for j in range(n_pop):
+        for i in range(n_avg):
+            new_policy = {'gen': gen, 'name': name, 'id': i, 'seeds': [np.random.randint(int(1e9))]}
+            unfinished_table.posts.insert_one(new_policy)
+        name += 1
 
 winning = False
 max_score = -10000.0
@@ -67,15 +114,6 @@ max_score = -10000.0
 while not winning:
     for generation in range(n_gen):
         gen += 1
-
-        name = 0
-        for policy in population:
-            for i in range(n_avg):
-                new_policy = {'gen': gen, 'name': name, 'id': i, 'seeds': policy['seeds']}
-                unfinished_table.posts.insert_one(new_policy)
-            name += 1
-
-        delete = finished_table.posts.delete_many({})
 
         n_finished = 0
         p_done = 0.0
@@ -143,6 +181,15 @@ while not winning:
             name += 1
 
         delete = backup_table.posts.delete_many({'gen': gen - 1})
+
+        name = 0
+        for policy in population:
+            for i in range(n_avg):
+                new_policy = {'gen': gen, 'name': name, 'id': i, 'seeds': policy['seeds']}
+                unfinished_table.posts.insert_one(new_policy)
+            name += 1
+
+        delete = finished_table.posts.delete_many({})
 
     np.savez('./champions/' + game + '/' + game + '.npz', seeds=champion)
 
