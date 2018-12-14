@@ -2,6 +2,9 @@ import numpy as np
 import gym
 import gym.spaces
 from reactive control import rc_gym
+from pymongo import MongoClient
+from time import sleep
+import datetime
 
 class Policy():
     def __init__(self, shape, hidden_units, num_actions, a_bound, seeds):
@@ -66,19 +69,36 @@ class Policy():
         Y = (Y + 1.0) / 2.0
         return Y * (self.a_bound[1] - self.a_bound[0]) + self.a_bound[0]
 
-####################################################################
-#####                                                          #####
-#####         Wait for unfinished policies to be ready         #####
-#####    Move the unfinished policy to the inprogress table    #####
-#####                                                          #####
-####################################################################
+db_name = '2h2o'                    # Name of database to use
+db_loc = 'coombs.science.uoit.ca'   # Location of MongoDB instance
+db_port = 2507                      # Port for MongoDB instance
+
+client = MongoClient(db_loc + ':' + str(db_port))
+finished_table = client[db_name + '-finished']
+unfinished_table = client[db_name + '-unfinished']
+working_table = client[db_name + '-working']
+
+n_unfinished = 0
+n_delete = 0
+while n_unfinished < 1:
+    sleep(5)
+    n_unfinished = unfinished_table.posts.count_documents({})
+
+while n_delete < 1:
+    policy = unfinished.posts.find_one()
+    new_policy = {'gen': policy['gen'], 'name': policy['name'], 'id': policy['id'], 'seeds': policy['seeds'], 'start_time': datetime.datetime.utcnow()}
+    insert = working_table.posts.insert_one(new_policy)
+    delete = unfinished_table.posts.delete_one(policy)
+    n_delete = delete.deleted_count
 
 game = '2h2o-v0'
 env = gym.make(game)
 s = env.reset()
 shape = s.shape[0]
+hidden_units = np.array([1024])
 num_actions = env.action_space.shape[0]
 a_bound = [env.action_space.low, env.action_space.high]
+seeds = policy['seeds']
 policy = Policy(shape, hidden_units, num_actions, a_bound, seeds)
 reward = 0
 d = False
@@ -87,8 +107,5 @@ while not d:
     s, r, d, _ = env.step(a)
     reward += r
 
-####################################################################
-#####                                                          #####
-#####            Populate the finished policy table            #####
-#####                                                          #####
-####################################################################
+new_policy = {'gen': new_policy['gen'], 'name': new_policy['name'], 'id': new_policy['id'], 'seeds': new_policy['seeds'], 'score': reward}
+insert = finished_table.posts.insert_one(new_policy)
