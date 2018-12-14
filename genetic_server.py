@@ -62,7 +62,7 @@ else:
         population.append({'seeds': [np.random.randint(int(1e9))]})
 
 winning = False
-max_s0 = -10000.0
+max_score = -10000.0
 
 while not winning:
     for generation in range(n_gen):
@@ -119,10 +119,10 @@ while not winning:
 
         print('Generation %d: Average Score = %0.4f, Max Score = %0.4f' %(gen, np.mean(scores), population[-1]['score']))
 
-        if max_s0 < population[-1]['score']:
+        if max_score < population[-1]['score']:
             champion = population[-1]
             np.savez('./champions/' + game + '/' + game + '.npz', seeds=champion['seeds'])
-            max_s0 = champion['score']
+            max_score = champion['score']
 
         mutants = []
         for i in range(n_mutate):
@@ -139,10 +139,12 @@ while not winning:
         name = 0
         for policy in population:
             new_policy = {'gen': gen, 'name': name, 'seeds': seeds}
-            backup_table.posts.insert_one(new_policy)
+            insert = backup_table.posts.insert_one(new_policy)
             name += 1
+
+        delete = backup_table.posts.delete_many({'gen': gen - 1})
 
     np.savez('./champions/' + game + '/' + game + '.npz', seeds=champion)
 
-    if max_s0 > wins:
+    if max_score > wins:
         winning = True
