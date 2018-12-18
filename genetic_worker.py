@@ -86,48 +86,45 @@ finished_table = client[db_name + '-finished']
 unfinished_table = client[db_name + '-unfinished']
 working_table = client[db_name + '-working']
 
-while True:
-    n_delete = 0
-    while n_delete < 1:
-        n_unfinished = 0
-        while n_unfinished < 1:
-            sleep(1)
-            n_unfinished = unfinished_table.posts.count_documents({})
+n_delete = 0
+while n_delete < 1:
+n_unfinished = 0
+while n_unfinished < 1:
+    sleep(1)
+    n_unfinished = unfinished_table.posts.count_documents({})
 
-        policy = unfinished_table.posts.find_one()
-        new_policy = {'_id': policy['_id'], 'gen': policy['gen'], 'name': policy['name'], 'id': policy['id'], 'seeds': policy['seeds'], 'start_time': datetime.datetime.utcnow()}
+policy = unfinished_table.posts.find_one()
+new_policy = {'_id': policy['_id'], 'gen': policy['gen'], 'name': policy['name'], 'id': policy['id'], 'seeds': policy['seeds'], 'start_time': datetime.datetime.utcnow()}
 
-        try:
-            insert = working_table.posts.insert_one(new_policy)
-        except pymongo.errors.DuplicateKeyError:
-            sleep(5)
-            try:
-                insert = working_table.posts.insert_one(new_policy)
-            except pymongo.errors.DuplicateKeyError:
-                pass
+try:
+    insert = working_table.posts.insert_one(new_policy)
+except pymongo.errors.DuplicateKeyError:
+    sleep(5)
+    try:
+	insert = working_table.posts.insert_one(new_policy)
+    except pymongo.errors.DuplicateKeyError:
+	pass
 
-        print('Policy added')
-        sleep(5)
-        delete = unfinished_table.posts.delete_one(policy)
-        n_delete = delete.deleted_count
+delete = unfinished_table.posts.delete_one(policy)
+n_delete = delete.deleted_count
 
-    game = params['game']
-    env = gym.make(game)
-    s = env.reset()
-    shape = s.shape[0]
-    hidden_units = params['hidden_units']
-    num_actions = env.action_space.shape[0]
-    a_bound = [env.action_space.low, env.action_space.high]
-    mut_rate = params['mut_rate']
-    seeds = policy['seeds']
-    policy = Policy(shape, hidden_units, num_actions, a_bound, mut_rate, seeds)
-    reward = 0
-    d = False
-    while not d:
-        a = policy.evaluate(s)
-        s, r, d, _ = env.step(a)
-        reward += r
+game = params['game']
+env = gym.make(game)
+s = env.reset()
+shape = s.shape[0]
+hidden_units = params['hidden_units']
+num_actions = env.action_space.shape[0]
+a_bound = [env.action_space.low, env.action_space.high]
+mut_rate = params['mut_rate']
+seeds = policy['seeds']
+policy = Policy(shape, hidden_units, num_actions, a_bound, mut_rate, seeds)
+reward = 0
+d = False
+while not d:
+a = policy.evaluate(s)
+s, r, d, _ = env.step(a)
+reward += r
 
-    finished_policy = {'_id': new_policy['_id'], 'gen': new_policy['gen'], 'name': new_policy['name'], 'id': new_policy['id'], 'seeds': new_policy['seeds'], 'score': reward}
-    insert = finished_table.posts.insert_one(finished_policy)
-    delete = working_table.posts.delete_one(new_policy)
+finished_policy = {'_id': new_policy['_id'], 'gen': new_policy['gen'], 'name': new_policy['name'], 'id': new_policy['id'], 'seeds': new_policy['seeds'], 'score': reward}
+insert = finished_table.posts.insert_one(finished_policy)
+delete = working_table.posts.delete_one(new_policy)
