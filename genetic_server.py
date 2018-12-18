@@ -17,12 +17,13 @@ restart = False                     # Restart from last completed generation
 wins = 100                          # Wins required for champion to be considered winner
 t_max = 60                          # Number of seconds before a policy in the working on table expires 
 n_avg = 2                           # Number of times each policy is evaluated
-game = 'Pendulum-v0'                # Game the workers will be playing
+game = 'water-v0'                   # Game the workers will be playing
 hidden_units = [1024]               # Number of hidden units for each layer
 mut_rate = 0.05                     # Rate used for the mutation process
-db_name = 'Pendulum'                # Name of database to use
+db_name = 'water'                   # Name of database to use
 db_loc = 'coombs.science.uoit.ca'   # Location of MongoDB instance
 db_port = 2507                      # Port for MongoDB instance
+submit = 'bash -ic "cd ~/submit_scripts/; sbatch submit.sh"'
 
 client = pymongo.MongoClient(db_loc + ':' + str(db_port))
 finished_table = client[db_name + '-finished']
@@ -146,6 +147,7 @@ while not winning:
                         if n_finished < n_pop:
                             try:
                                 insert = unfinished_table.posts.insert_one(new_policy)
+                                os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; sbatch submit.sh\"\'')
                             except pymongo.errors.DuplicateKeyError:
                                 pass
 
@@ -204,12 +206,14 @@ while not winning:
                 new_policy = {'_id': policy['_ids'][i], 'gen': gen, 'name': name, 'id': i, 'seeds': policy['seeds']}
                 insert = unfinished_table.posts.insert_one(new_policy)
                 delete = finished_table.posts.delete_one({'_id': policy['_ids'][i]})
+                os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; sbatch submit.sh\"\'')
             name += 1
 
         for policy in mutants:
             for i in range(n_avg):
                 new_policy = {'gen': gen, 'name': name, 'id': i, 'seeds': policy['seeds']}
                 insert = unfinished_table.posts.insert_one(new_policy)
+                os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; sbatch submit.sh\"\'')
             name += 1
 
         delete = finished_table.posts.delete_many({'gen': gen - 1})
