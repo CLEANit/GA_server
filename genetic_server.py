@@ -7,15 +7,15 @@ import datetime
 if not os.path.exists('./champions'):
     os.makedirs('./champions')
 
-n_gen = 10                          # Number of generations
-n_pop = 5                           # Starting population
-n_mutate = 2                        # Number of mutations per generation
-n_sacrifice = 2                     # Number of removals per generation
+n_gen = 1000                        # Number of generations
+n_pop = 100                         # Starting population
+n_mutate = 75                       # Number of mutations per generation
+n_sacrifice = 75                    # Number of removals per generation
 load = False                        # Load previous champion (only if not restarting)
 load_gen = 0                        # Generation to load
 restart = False                     # Restart from last completed generation
 wins = 100                          # Wins required for champion to be considered winner
-t_max = 60                          # Number of seconds before a policy in the working on table expires 
+t_max = 600                         # Number of seconds before a policy in the working on table expires 
 n_avg = 2                           # Number of times each policy is evaluated
 game = 'water-v0'                   # Game the workers will be playing
 hidden_units = [1024]               # Number of hidden units for each layer
