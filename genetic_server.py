@@ -143,7 +143,7 @@ while not winning:
                     if dt.seconds > t_max:
                         new_policy = {'_id': policy['_id'], 'gen': policy['gen'], 'name': policy['name'], 'id': policy['id'], 'seeds': policy['seeds']}
 
-                        if n_finished == n_pop:
+                        if n_finished < n_pop:
                             try:
                                 insert = unfinished_table.posts.insert_one(new_policy)
                             except pymongo.errors.DuplicateKeyError:
