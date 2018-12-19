@@ -76,36 +76,141 @@ class Policy():
 db_loc = 'fock'                     # Location of MongoDB instance
 db_port = 2507                      # Port for MongoDB instance
 
-client = pymongo.MongoClient(db_loc + ':' + str(db_port))
-parameter_table = client['parameters']
+connected = False
+attempt = 0
+while not connected:
+    if attempt < 5:
+        try:
+            client = pymongo.MongoClient(db_loc + ':' + str(db_port))
+            connected = True
+        except pymongo.errors.AutoReconnect:
+            connected = False
+            attempt += 1
 
-params = parameter_table.posts.find_one()
+connected = False
+attempt = 0
+while not connected:
+    if attempt < 5:
+        try:
+            parameter_table = client['parameters']
+            connected = True
+        except pymongo.errors.AutoReconnect:
+            connected = False
+            attempt += 1
+
+connected = False
+attempt = 0
+while not connected:
+    if attempt < 5:
+        try:
+            params = parameter_table.posts.find_one()
+            connected = True
+        except pymongo.errors.AutoReconnect:
+            connected = False
+            attempt += 1
+
 db_name = params['db_name']         # Name of database to use
 
-finished_table = client[db_name + '-finished']
-unfinished_table = client[db_name + '-unfinished']
-working_table = client[db_name + '-working']
+connected = False
+attempt = 0
+while not connected:
+    if attempt < 5:
+        try:
+            finished_table = client[db_name + '-finished']
+            connected = True
+        except pymongo.errors.AutoReconnect:
+            connected = False
+            attempt += 1
+
+connected = False
+attempt = 0
+while not connected:
+    if attempt < 5:
+        try:
+            unfinished_table = client[db_name + '-unfinished']
+            connected = True
+        except pymongo.errors.AutoReconnect:
+            connected = False
+            attempt += 1
+
+connected = False
+attempt = 0
+while not connected:
+    if attempt < 5:
+        try:
+            working_table = client[db_name + '-working']
+            connected = True
+        except pymongo.errors.AutoReconnect:
+            connected = False
+            attempt += 1
 
 n_delete = 0
 while n_delete < 1:
     n_unfinished = 0
     while n_unfinished < 1:
         sleep(1)
-        n_unfinished = unfinished_table.posts.count_documents({})
+        connected = False
+        attempt = 0
+        while not connected:
+            if attempt < 5:
+                try:
+                    n_unfinished = unfinished_table.posts.count_documents({})
+                    connected = True
+                except pymongo.errors.AutoReconnect:
+                    connected = False
+                    attempt += 1
 
-    policy = unfinished_table.posts.find_one()
+    connected = False
+    attempt = 0
+    while not connected:
+        if attempt < 5:
+            try:
+                policy = unfinished_table.posts.find_one()
+                connected = True
+            except pymongo.errors.AutoReconnect:
+                connected = False
+                attempt += 1
+
     new_policy = {'_id': policy['_id'], 'gen': policy['gen'], 'name': policy['name'], 'id': policy['id'], 'seeds': policy['seeds'], 'start_time': datetime.datetime.utcnow()}
 
     try:
-        insert = working_table.posts.insert_one(new_policy)
+        connected = False
+        attempt = 0
+        while not connected:
+            if attempt < 5:
+                try:
+                    insert = working_table.posts.insert_one(new_policy)
+                    connected = True
+                except pymongo.errors.AutoReconnect:
+                    connected = False
+                    attempt += 1
     except pymongo.errors.DuplicateKeyError:
         sleep(5)
         try:
-            insert = working_table.posts.insert_one(new_policy)
+            connected = False
+            attempt = 0
+            while not connected:
+                if attempt < 5:
+                    try:
+                        insert = working_table.posts.insert_one(new_policy)
+                        connected = True
+                    except pymongo.errors.AutoReconnect:
+                        connected = False
+                        attempt += 1
         except pymongo.errors.DuplicateKeyError:
             pass
 
-    delete = unfinished_table.posts.delete_one(policy)
+    connected = False
+    attempt = 0
+    while not connected:
+        if attempt < 5:
+            try:
+                delete = unfinished_table.posts.delete_one(policy)
+                connected = True
+            except pymongo.errors.AutoReconnect:
+                connected = False
+                attempt += 1
+
     n_delete = delete.deleted_count
 
 game = params['game']
@@ -129,7 +234,27 @@ while not d:
     step += 1
 
 finished_policy = {'_id': new_policy['_id'], 'gen': new_policy['gen'], 'name': new_policy['name'], 'id': new_policy['id'], 'seeds': new_policy['seeds'], 'score': reward}
-insert = finished_table.posts.insert_one(finished_policy)
-delete = working_table.posts.delete_one(new_policy)
+
+connected = False
+attempt = 0
+while not connected:
+    if attempt < 5:
+        try:
+            insert = finished_table.posts.insert_one(finished_policy)
+            connected = True
+        except pymongo.errors.AutoReconnect:
+            connected = False
+            attempt += 1
+
+connected = False
+attempt = 0
+while not connected:
+    if attempt < 5:
+        try:
+            delete = working_table.posts.delete_one(new_policy)
+            connected = True
+        except pymongo.errors.AutoReconnect:
+            connected = False
+            attempt += 1
 
 print('Policy ' + str(new_policy['name']) + '.' + str(new_policy['id']) + ' has a score of ' + str(reward) + '.')
