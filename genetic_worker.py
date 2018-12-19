@@ -73,7 +73,7 @@ class Policy():
         Y = (Y + 1.0) / 2.0
         return Y * (self.a_bound[1] - self.a_bound[0]) + self.a_bound[0]
 
-db_loc = 'coombs.science.uoit.ca'   # Location of MongoDB instance
+db_loc = 'fock'                     # Location of MongoDB instance
 db_port = 2507                      # Port for MongoDB instance
 
 client = pymongo.MongoClient(db_loc + ':' + str(db_port))
