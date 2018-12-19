@@ -15,15 +15,14 @@ load = False                        # Load previous champion (only if not restar
 load_gen = 0                        # Generation to load
 restart = False                     # Restart from last completed generation
 wins = 100                          # Wins required for champion to be considered winner
-t_max = 600                         # Number of seconds before a policy in the working on table expires 
-n_avg = 2                           # Number of times each policy is evaluated
+t_max = 200                         # Number of seconds before a policy in the working on table expires 
+n_avg = 5                           # Number of times each policy is evaluated
 game = 'water-v0'                   # Game the workers will be playing
 hidden_units = [1024]               # Number of hidden units for each layer
 mut_rate = 0.05                     # Rate used for the mutation process
 db_name = 'water'                   # Name of database to use
 db_loc = 'coombs.science.uoit.ca'   # Location of MongoDB instance
 db_port = 2507                      # Port for MongoDB instance
-submit = 'bash -ic "cd ~/submit_scripts/; sbatch submit.sh"'
 
 client = pymongo.MongoClient(db_loc + ':' + str(db_port))
 finished_table = client[db_name + '-finished']
@@ -76,12 +75,14 @@ if restart and n_backup <= n_pop:
             for i in range(n_avg):
                 new_policy = {'_id': policy['_id'], 'gen': gen, 'name': name, 'id': i, 'seeds': policy['seeds']}
                 unfinished_table.posts.insert_one(new_policy)
+                os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; sbatch submit.sh\"\'')
             name += 1
         if n_backup < n_pop:
             for j in range(n_pop - len(population)):
                 for i in range(n_avg):
                     new_policy = {'gen': gen, 'name': name, 'id': i, 'seeds': [np.random.randint(int(1e9))]}
                     unfinished_table.posts.insert_one(new_policy)
+                    os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; sbatch submit.sh\"\'')
             name += 1
 
 elif load:
@@ -95,12 +96,14 @@ elif load:
     for i in range(n_avg):
         new_policy = {'gen': gen, 'name': 0, 'id': i, 'seeds': data['seeds']}
         unfinished_table.posts.insert_one(new_policy)
+        os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; sbatch submit.sh\"\'')
 
     name = 1
     for j in range(n_pop - 1):
         for i in range(n_avg):
             new_policy = {'gen': gen, 'name': name, 'id': i, 'seeds': [np.random.randint(int(1e9))]}
             unfinished_table.posts.insert_one(new_policy)
+            os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; sbatch submit.sh\"\'')
         name += 1
 
 else:
@@ -115,6 +118,7 @@ else:
         for i in range(n_avg):
             new_policy = {'gen': gen, 'name': name, 'id': i, 'seeds': [np.random.randint(int(1e9))]}
             unfinished_table.posts.insert_one(new_policy)
+            os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; sbatch submit.sh\"\'')
         name += 1
 
 winning = False
@@ -144,7 +148,7 @@ while not winning:
                     if dt.seconds > t_max:
                         new_policy = {'_id': policy['_id'], 'gen': policy['gen'], 'name': policy['name'], 'id': policy['id'], 'seeds': policy['seeds']}
 
-                        if n_finished < n_pop:
+                        if n_finished < (n_pop * n_avg):
                             try:
                                 insert = unfinished_table.posts.insert_one(new_policy)
                                 os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; sbatch submit.sh\"\'')
