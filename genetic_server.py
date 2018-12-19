@@ -144,6 +144,7 @@ while not winning:
             n_working = working_table.posts.count_documents({})
             if n_working > 0:
                 work_population = working_table.posts.find({})
+                n_resub = 0
                 for policy in work_population:
                     dt = datetime.datetime.utcnow() - policy['start_time']
                     if dt.seconds > t_max:
@@ -152,14 +153,17 @@ while not winning:
                         if n_finished < (n_pop * n_avg):
                             try:
                                 insert = unfinished_table.posts.insert_one(new_policy)
-                                os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; ./submitting.sh ' + str(1) + '\"\'')
                                 print('Moving expired policy back to unfinished table.')
+                                n_resub += 1
                             except pymongo.errors.DuplicateKeyError:
                                 pass
 
                         delete = working_table.posts.delete_one(policy)
 
                         print('Removing expired policy from working table.')
+
+                if n_resub > 0:
+                    os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; ./submitting.sh ' + str(n_resub) + '\"\'')
 
         population = []
         for i in range(n_pop):
