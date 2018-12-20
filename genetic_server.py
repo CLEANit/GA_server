@@ -75,11 +75,11 @@ if restart and n_backup <= n_pop:
         name = 0
         for policy in population:
             for i in range(n_avg):
-                new_policy = {'_id': policy['_id'], 'gen': gen, 'name': name, 'id': i, 'seeds': policy['seeds']}
+                new_policy = {'gen': gen, 'name': name, 'id': i, 'seeds': policy['seeds']}
                 unfinished_table.posts.insert_one(new_policy)
             name += 1
         if n_backup < n_pop:
-            for j in range(n_pop - len(population)):
+            for j in range(n_pop - n_backup):
                 for i in range(n_avg):
                     new_policy = {'gen': gen, 'name': name, 'id': i, 'seeds': [np.random.randint(int(1e9))]}
                     unfinished_table.posts.insert_one(new_policy)
@@ -149,7 +149,7 @@ while not winning:
                 n_resub = 0
                 for policy in work_population:
                     dt = datetime.datetime.utcnow() - policy['start_time']
-                    if dt.seconds > t_max:
+                    if dt.seconds > t_max and policy['location'] == 'cluster':
                         new_policy = {'_id': policy['_id'], 'gen': policy['gen'], 'name': policy['name'], 'id': policy['id'], 'seeds': policy['seeds']}
 
                         if n_finished < (n_pop * n_avg):
