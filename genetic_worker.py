@@ -5,6 +5,7 @@ from reactive_control import rc_gym
 import pymongo
 from time import sleep
 import datetime
+import os
 
 class Policy():
     def __init__(self, shape, hidden_units, num_actions, a_bound, mut_rate, seeds):
@@ -79,6 +80,7 @@ db_port = 2507                      # Port for MongoDB instance
 connected = False
 attempt = 0
 while not connected:
+    print('Check 1')
     if attempt < 5:
         try:
             client = pymongo.MongoClient(db_loc + ':' + str(db_port))
@@ -86,10 +88,15 @@ while not connected:
         except pymongo.errors.AutoReconnect:
             connected = False
             attempt += 1
+    else:
+        os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+        print('AutoReconnect failed, resubmitting job')
+        quit()
 
 connected = False
 attempt = 0
 while not connected:
+    print('Check 2')
     if attempt < 5:
         try:
             parameter_table = client['parameters']
@@ -97,10 +104,15 @@ while not connected:
         except pymongo.errors.AutoReconnect:
             connected = False
             attempt += 1
+    else:
+        os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+        print('AutoReconnect failed, resubmitting job')
+        quit()
 
 connected = False
 attempt = 0
 while not connected:
+    print('Check 3')
     if attempt < 5:
         try:
             params = parameter_table.posts.find_one()
@@ -108,12 +120,17 @@ while not connected:
         except pymongo.errors.AutoReconnect:
             connected = False
             attempt += 1
+    else:
+        os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+        print('AutoReconnect failed, resubmitting job')
+        quit()
 
 db_name = params['db_name']         # Name of database to use
 
 connected = False
 attempt = 0
 while not connected:
+    print('Check 4')
     if attempt < 5:
         try:
             finished_table = client[db_name + '-finished']
@@ -121,10 +138,15 @@ while not connected:
         except pymongo.errors.AutoReconnect:
             connected = False
             attempt += 1
+    else:
+        os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+        print('AutoReconnect failed, resubmitting job')
+        quit()
 
 connected = False
 attempt = 0
 while not connected:
+    print('Check 5')
     if attempt < 5:
         try:
             unfinished_table = client[db_name + '-unfinished']
@@ -132,10 +154,15 @@ while not connected:
         except pymongo.errors.AutoReconnect:
             connected = False
             attempt += 1
+    else:
+        os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+        print('AutoReconnect failed, resubmitting job')
+        quit()
 
 connected = False
 attempt = 0
 while not connected:
+    print('Check 6')
     if attempt < 5:
         try:
             working_table = client[db_name + '-working']
@@ -143,6 +170,10 @@ while not connected:
         except pymongo.errors.AutoReconnect:
             connected = False
             attempt += 1
+    else:
+        os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+        print('AutoReconnect failed, resubmitting job')
+        quit()
 
 n_delete = 0
 while n_delete < 1:
@@ -152,6 +183,7 @@ while n_delete < 1:
         connected = False
         attempt = 0
         while not connected:
+            print('Check 7')
             if attempt < 5:
                 try:
                     n_unfinished = unfinished_table.posts.count_documents({})
@@ -159,10 +191,15 @@ while n_delete < 1:
                 except pymongo.errors.AutoReconnect:
                     connected = False
                     attempt += 1
+            else:
+                os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+                print('AutoReconnect failed, resubmitting job')
+                quit()
 
     connected = False
     attempt = 0
     while not connected:
+        print('Check 8')
         if attempt < 5:
             try:
                 policy = unfinished_table.posts.find_one()
@@ -170,6 +207,10 @@ while n_delete < 1:
             except pymongo.errors.AutoReconnect:
                 connected = False
                 attempt += 1
+        else:
+            os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+            print('AutoReconnect failed, resubmitting job')
+            quit()
 
     new_policy = {'_id': policy['_id'], 'gen': policy['gen'], 'name': policy['name'], 'id': policy['id'], 'seeds': policy['seeds'], 'start_time': datetime.datetime.utcnow()}
 
@@ -177,6 +218,7 @@ while n_delete < 1:
         connected = False
         attempt = 0
         while not connected:
+            print('Check 9')
             if attempt < 5:
                 try:
                     insert = working_table.posts.insert_one(new_policy)
@@ -184,12 +226,18 @@ while n_delete < 1:
                 except pymongo.errors.AutoReconnect:
                     connected = False
                     attempt += 1
+            else:
+                os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+                print('AutoReconnect failed, resubmitting job')
+                quit()
+
     except pymongo.errors.DuplicateKeyError:
         sleep(5)
         try:
             connected = False
             attempt = 0
             while not connected:
+                print('Check 10')
                 if attempt < 5:
                     try:
                         insert = working_table.posts.insert_one(new_policy)
@@ -197,12 +245,18 @@ while n_delete < 1:
                     except pymongo.errors.AutoReconnect:
                         connected = False
                         attempt += 1
+            else:
+                os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+                print('AutoReconnect failed, resubmitting job')
+                quit()
+
         except pymongo.errors.DuplicateKeyError:
             pass
 
     connected = False
     attempt = 0
     while not connected:
+        print('Check 11')
         if attempt < 5:
             try:
                 delete = unfinished_table.posts.delete_one(policy)
@@ -210,6 +264,10 @@ while n_delete < 1:
             except pymongo.errors.AutoReconnect:
                 connected = False
                 attempt += 1
+        else:
+            os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+            print('AutoReconnect failed, resubmitting job')
+            quit()
 
     n_delete = delete.deleted_count
 
@@ -238,6 +296,7 @@ finished_policy = {'_id': new_policy['_id'], 'gen': new_policy['gen'], 'name': n
 connected = False
 attempt = 0
 while not connected:
+    print('Check 12')
     if attempt < 5:
         try:
             insert = finished_table.posts.insert_one(finished_policy)
@@ -245,10 +304,15 @@ while not connected:
         except pymongo.errors.AutoReconnect:
             connected = False
             attempt += 1
+    else:
+        os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+        print('AutoReconnect failed, resubmitting job')
+        quit()
 
 connected = False
 attempt = 0
 while not connected:
+    print('Check 13')
     if attempt < 5:
         try:
             delete = working_table.posts.delete_one(new_policy)
@@ -256,5 +320,9 @@ while not connected:
         except pymongo.errors.AutoReconnect:
             connected = False
             attempt += 1
+    else:
+        os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+        print('AutoReconnect failed, resubmitting job')
+        quit()
 
 print('Policy ' + str(new_policy['name']) + '.' + str(new_policy['id']) + ' has a score of ' + str(reward) + '.')
