@@ -8,12 +8,13 @@ import datetime
 import os
 
 class Policy():
-    def __init__(self, shape, hidden_units, num_actions, a_bound, mut_rate, seeds):
+    def __init__(self, shape, hidden_units, num_actions, a_bound, mut_rate, space, seeds):
         self.shape = shape
         self.hidden_units = hidden_units
         self.num_actions = num_actions
         self.a_bound = a_bound
         self.mut_rate = mut_rate
+        self.space = space
         self.seeds = seeds
         self.W = []
         self.B = []
@@ -67,6 +68,7 @@ class Policy():
             self.B[-1] += mut_rate * b
 
     def evaluate(self, state):
+        X = (state - self.space.low) / (self.space.high - self.space.low)
         Y = np.tanh(np.matmul(state, self.W[0]) + self.B[0])
         for i in range(1, len(self.W)):
             Y = np.tanh(np.matmul(Y, self.W[i]) + self.B[i])
@@ -279,6 +281,7 @@ hidden_units = params['hidden_units']
 num_actions = env.action_space.shape[0]
 a_bound = [env.action_space.low, env.action_space.high]
 mut_rate = params['mut_rate']
+space = env.observation_space
 seeds = policy['seeds']
 policy = Policy(shape, hidden_units, num_actions, a_bound, mut_rate, seeds)
 reward = 0
