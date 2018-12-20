@@ -9,15 +9,16 @@ if not os.path.exists('./champions'):
     os.makedirs('./champions')
 
 n_gen = 1000                        # Number of generations
-n_pop = 100                         # Starting population
-n_mutate = 75                       # Number of mutations per generation
-n_sacrifice = 75                    # Number of removals per generation
+n_pop = 5                           # Starting population
+n_mutate = 2                        # Number of mutations per generation
+n_sacrifice = 2                     # Number of removals per generation
 load = False                        # Load previous champion (only if not restarting)
 load_gen = 0                        # Generation to load
 restart = False                     # Restart from last completed generation
 wins = 100                          # Wins required for champion to be considered winner
 t_max = 300                         # Number of seconds before a policy in the working on table expires 
-n_avg = 7                           # Number of times each policy is evaluated
+t_local_max = 600                   # Number of seconds before a policy in the working on table expires 
+n_avg = 2                           # Number of times each policy is evaluated
 game = 'water-v0'                   # Game the workers will be playing
 hidden_units = [1024]               # Number of hidden units for each layer
 mut_rate = 0.05                     # Rate used for the mutation process
@@ -149,7 +150,7 @@ while not winning:
                 n_resub = 0
                 for policy in work_population:
                     dt = datetime.datetime.utcnow() - policy['start_time']
-                    if dt.seconds > t_max and policy['location'] == 'cluster':
+                    if (dt.seconds > t_max and policy['location'] == 'cluster') or (dt.seconds > t_local_max and policy['location'] == 'local'):
                         new_policy = {'_id': policy['_id'], 'gen': policy['gen'], 'name': policy['name'], 'id': policy['id'], 'seeds': policy['seeds']}
 
                         if n_finished < (n_pop * n_avg):
@@ -232,7 +233,6 @@ while not winning:
 
         delete = finished_table.posts.delete_many({'gen': gen - 1})
 
-        os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; ./submitting.sh ' + str(n_pop * n_avg) + '\"\'')
         n_queue = int(subprocess.run(['./get_squeue.sh', user], stdout=subprocess.PIPE).stdout) - 1
         n_resub = (n_pop * n_avg) - n_queue
         if n_resub > 0:
