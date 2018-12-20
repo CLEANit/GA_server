@@ -214,7 +214,7 @@ while n_delete < 1:
             print('AutoReconnect failed, resubmitting job')
             quit()
 
-    new_policy = {'_id': policy['_id'], 'gen': policy['gen'], 'name': policy['name'], 'id': policy['id'], 'seeds': policy['seeds'], 'start_time': datetime.datetime.utcnow()}
+    new_policy = {'_id': policy['_id'], 'gen': policy['gen'], 'name': policy['name'], 'id': policy['id'], 'seeds': policy['seeds'], 'start_time': datetime.datetime.utcnow(), 'location': 'cluster'}
 
     try:
         connected = False

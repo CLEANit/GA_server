@@ -77,7 +77,7 @@ class Policy():
         return Y * (self.a_bound[1] - self.a_bound[0]) + self.a_bound[0]
 
 def work():
-    db_loc = 'fock'                     # Location of MongoDB instance
+    db_loc = 'fock.sims.nrc.ca'         # Location of MongoDB instance
     db_port = 2507                      # Port for MongoDB instance
 
     connected = False
@@ -191,7 +191,7 @@ def work():
             else:
                 return 0.0
 
-        new_policy = {'_id': policy['_id'], 'gen': policy['gen'], 'name': policy['name'], 'id': policy['id'], 'seeds': policy['seeds'], 'start_time': datetime.datetime.utcnow()}
+        new_policy = {'_id': policy['_id'], 'gen': policy['gen'], 'name': policy['name'], 'id': policy['id'], 'seeds': policy['seeds'], 'start_time': datetime.datetime.utcnow(), 'location': 'local'}
 
         try:
             connected = False
