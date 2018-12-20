@@ -294,4 +294,12 @@ def work():
     return 0.0
 
 while True:
+    print('Starting worker in...')
+    print('3')
+    sleep(1)
+    print('2')
+    sleep(1)
+    print('1')
+    sleep(1)
+    print('Starting worker now!')
     work()
