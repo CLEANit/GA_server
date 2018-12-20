@@ -13,10 +13,10 @@ n_mutate = 75                       # Number of mutations per generation
 n_sacrifice = 75                    # Number of removals per generation
 load = False                        # Load previous champion (only if not restarting)
 load_gen = 0                        # Generation to load
-restart = False                     # Restart from last completed generation
+restart = True                      # Restart from last completed generation
 wins = 100                          # Wins required for champion to be considered winner
 t_max = 300                         # Number of seconds before a policy in the working on table expires 
-n_avg = 10                          # Number of times each policy is evaluated
+n_avg = 7                           # Number of times each policy is evaluated
 game = 'water-v0'                   # Game the workers will be playing
 hidden_units = [1024]               # Number of hidden units for each layer
 mut_rate = 0.05                     # Rate used for the mutation process
@@ -184,7 +184,7 @@ while not winning:
         for policy in population:
             scores += policy['score'] / n_pop
             if policy['score'] > 0.0:
-                np.savez('./champions/' + game + '/' + game + '_' + str(gen) + str(policy['name']) + '.npz', seeds=champion['seeds'])
+                np.savez('./champions/' + game + '/' + game + '_' + str(gen) + '-' + str(policy['name']) + '.npz', seeds=champion['seeds'])
 
         print('Generation %d: Average Score = %0.4f, Max Score = %0.4f' %(gen, np.mean(scores), population[-1]['score']))
 
