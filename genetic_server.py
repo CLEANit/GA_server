@@ -3,6 +3,7 @@ import os
 import pymongo
 from time import sleep
 import datetime
+import subprocess
 
 if not os.path.exists('./champions'):
     os.makedirs('./champions')
@@ -13,7 +14,7 @@ n_mutate = 75                       # Number of mutations per generation
 n_sacrifice = 75                    # Number of removals per generation
 load = False                        # Load previous champion (only if not restarting)
 load_gen = 0                        # Generation to load
-restart = True                      # Restart from last completed generation
+restart = False                     # Restart from last completed generation
 wins = 100                          # Wins required for champion to be considered winner
 t_max = 300                         # Number of seconds before a policy in the working on table expires 
 n_avg = 7                           # Number of times each policy is evaluated
@@ -23,6 +24,7 @@ mut_rate = 0.05                     # Rate used for the mutation process
 db_name = 'water'                   # Name of database to use
 db_loc = 'fock.sims.nrc.ca'         # Location of MongoDB instance
 db_port = 2507                      # Port for MongoDB instance
+user = 'cbeeler'                    # Username of account running GA code
 
 client = pymongo.MongoClient(db_loc + ':' + str(db_port))
 finished_table = client[db_name + '-finished']
@@ -162,6 +164,8 @@ while not winning:
 
                         print('Removing expired policy from working table.')
 
+                n_queue = int(subprocess.run(['./get_squeue.sh', user], stdout=subprocess.PIPE).stdout) - 1
+                n_resub = np.min([n_queue, n_resub])
                 if n_resub > 0:
                     os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; ./submitting.sh ' + str(n_resub) + '\"\'')
 
@@ -229,6 +233,10 @@ while not winning:
         delete = finished_table.posts.delete_many({'gen': gen - 1})
 
         os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; ./submitting.sh ' + str(n_pop * n_avg) + '\"\'')
+        n_queue = int(subprocess.run(['./get_squeue.sh', user], stdout=subprocess.PIPE).stdout) - 1
+        n_resub = (n_pop * n_avg) - n_queue
+        if n_resub > 0:
+            os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; ./submitting.sh ' + str(n_resub) + '\"\'')
 
     np.savez('./champions/' + game + '/' + game + '.npz', seeds=champion)
 
