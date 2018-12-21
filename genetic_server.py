@@ -14,7 +14,7 @@ n_mutate = 75                       # Number of mutations per generation
 n_sacrifice = 75                    # Number of removals per generation
 load = False                        # Load previous champion (only if not restarting)
 load_gen = 0                        # Generation to load
-restart = False                     # Restart from last completed generation
+restart = True                      # Restart from last completed generation
 wins = 100                          # Wins required for champion to be considered winner
 t_max = 300                         # Number of seconds before a policy in the working on table expires 
 t_local_max = 600                   # Number of seconds before a policy in the working on table expires 
@@ -172,6 +172,7 @@ while not winning:
 
             elif n_queue == 0:
                 os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; ./submitting.sh ' + str((n_pop * n_avg) - n_finished) + '\"\'')
+                print('Queue is empty, resubmitting jobs.')
 
         population = []
         for i in range(n_pop):
