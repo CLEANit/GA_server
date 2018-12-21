@@ -145,6 +145,7 @@ while not winning:
             p_done0 = p_done
 
             n_working = working_table.posts.count_documents({})
+            n_queue = int(subprocess.run(['./get_squeue.sh', user], stdout=subprocess.PIPE).stdout) - 1
             if n_working > 0:
                 work_population = working_table.posts.find({})
                 n_resub = 0
@@ -165,10 +166,12 @@ while not winning:
 
                         print('Removing expired policy from working table.')
 
-                n_queue = int(subprocess.run(['./get_squeue.sh', user], stdout=subprocess.PIPE).stdout) - 1
                 n_resub = np.min([(n_avg * n_pop) - n_queue, n_resub])
                 if n_resub > 0:
                     os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; ./submitting.sh ' + str(n_resub) + '\"\'')
+
+            elif n_queue == 0:
+                os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; ./submitting.sh ' + str((n_pop * n_avg) - n_finished) + '\"\'')
 
         population = []
         for i in range(n_pop):
