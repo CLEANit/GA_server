@@ -14,18 +14,19 @@ n_mutate = 75                       # Number of mutations per generation
 n_sacrifice = 75                    # Number of removals per generation
 load = False                        # Load previous champion (only if not restarting)
 load_gen = 0                        # Generation to load
-restart = True                      # Restart from last completed generation
+restart = True                      # Restart from last completed calculation
+force_restart = False               # Restart from last completed generation
 wins = 100                          # Wins required for champion to be considered winner
-t_max = 300                         # Number of seconds before a policy in the working on table expires 
+t_max = 600                         # Number of seconds before a policy in the working on table expires 
 t_local_max = 600                   # Number of seconds before a policy in the working on table expires 
-n_avg = 7                           # Number of times each policy is evaluated
+n_avg = 10                          # Number of times each policy is evaluated
 game = 'water-v0'                   # Game the workers will be playing
 hidden_units = [1024]               # Number of hidden units for each layer
 mut_rate = 0.05                     # Rate used for the mutation process
 db_name = 'water'                   # Name of database to use
-db_loc = 'fock.sims.nrc.ca'         # Location of MongoDB instance
-db_port = 2507                      # Port for MongoDB instance
-user = 'cbeeler'                    # Username of account running GA code
+db_loc = IP_ADDRESS                 # Location of MongoDB instance
+db_port = PORT                      # Port for MongoDB instance
+user = USER                         # Username of account running GA code
 
 client = pymongo.MongoClient(db_loc + ':' + str(db_port))
 finished_table = client[db_name + '-finished']
@@ -57,7 +58,7 @@ if restart and n_backup <= n_pop:
     n_finished = finished_table.posts.count_documents({})
     n_unfinished = unfinished_table.posts.count_documents({})
     n_working = working_table.posts.count_documents({})
-    if (n_pop * n_avg) == (n_finished + n_working + n_unfinished):
+    if (n_pop * n_avg) == (n_finished + n_working + n_unfinished) and not force_restart:
         print('Restarting from last calculation...')
         policy = finished_table.posts.find_one()
         if policy == None:
@@ -127,6 +128,8 @@ else:
 
 winning = False
 max_score = -10000.0
+gen_scores = []
+gen_max = []
 
 while not winning:
     for generation in range(n_gen):
@@ -193,9 +196,11 @@ while not winning:
         for policy in population:
             scores += policy['score'] / n_pop
             if policy['score'] > 0.0:
-                np.savez('./champions/' + game + '/' + game + '_' + str(gen) + '-' + str(policy['name']) + '.npz', seeds=champion['seeds'])
+                np.savez('./champions/' + game + '/' + game + '_' + str(gen) + '-' + str(policy['name']) + '.npz', seeds=policy['seeds'])
 
         print('Generation %d: Average Score = %0.4f, Max Score = %0.4f' %(gen, np.mean(scores), population[-1]['score']))
+        gen_scores.append(np.mean(scores))
+        gen_max.append(population[-1]['score'])
 
         if max_score < population[-1]['score']:
             champion = population[-1]
@@ -223,11 +228,18 @@ while not winning:
 
         name = 0
         for policy in population:
-            for i in range(n_avg):
-                new_policy = {'_id': policy['_ids'][i], 'gen': gen, 'name': name, 'id': i, 'seeds': policy['seeds']}
-                insert = unfinished_table.posts.insert_one(new_policy)
-                delete = finished_table.posts.delete_one({'_id': policy['_ids'][i]})
-            name += 1
+            if len(policy['_ids']) == n_avg:
+                for i in range(n_avg):
+                    new_policy = {'_id': policy['_ids'][i], 'gen': gen, 'name': name, 'id': i, 'seeds': policy['seeds']}
+                    insert = unfinished_table.posts.insert_one(new_policy)
+                    delete = finished_table.posts.delete_one({'_id': policy['_ids'][i]})
+                name += 1
+            else:
+                for i in range(n_avg):
+                    new_policy = {'gen': gen, 'name': name, 'id': i, 'seeds': policy['seeds']}
+                    insert = unfinished_table.posts.insert_one(new_policy)
+                    delete = finished_table.posts.delete_one({'name': policy['name']})
+                name += 1
 
         for policy in mutants:
             for i in range(n_avg):
@@ -241,6 +253,10 @@ while not winning:
         n_resub = (n_pop * n_avg) - n_queue
         if n_resub > 0:
             os.system('ssh fock -t \'bash -ic \"cd ~/submit_scripts/; ./submitting.sh ' + str(n_resub) + '\"\'')
+
+        with open('./scores.dat', 'w') as F:
+            for i in range(len(gen_scores)):
+                F.write(str(gen_scores[i]) + ' ' + str(gen_max[i]) + '\n')
 
     np.savez('./champions/' + game + '/' + game + '.npz', seeds=champion)
 

@@ -76,8 +76,9 @@ class Policy():
         Y = (Y + 1.0) / 2.0
         return Y * (self.a_bound[1] - self.a_bound[0]) + self.a_bound[0]
 
-db_loc = 'fock'                     # Location of MongoDB instance
-db_port = 2507                      # Port for MongoDB instance
+db_loc = IP_ADDRESS                 # Location of MongoDB instance
+db_port = PORT                      # Port for MongoDB instance
+user = USER                         # Username of account running GA code
 
 connected = False
 attempt = 0
@@ -91,7 +92,7 @@ while not connected:
             connected = False
             attempt += 1
     else:
-        os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+        os.system('/globalhome/' + user + '/submit_scripts/submitting.sh 1')
         print('AutoReconnect failed, resubmitting job')
         quit()
 
@@ -107,7 +108,7 @@ while not connected:
             connected = False
             attempt += 1
     else:
-        os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+        os.system('/globalhome/' + user + '/submit_scripts/submitting.sh 1')
         print('AutoReconnect failed, resubmitting job')
         quit()
 
@@ -123,7 +124,7 @@ while not connected:
             connected = False
             attempt += 1
     else:
-        os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+        os.system('/globalhome/' + user + '/submit_scripts/submitting.sh 1')
         print('AutoReconnect failed, resubmitting job')
         quit()
 
@@ -141,7 +142,7 @@ while not connected:
             connected = False
             attempt += 1
     else:
-        os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+        os.system('/globalhome/' + user + '/submit_scripts/submitting.sh 1')
         print('AutoReconnect failed, resubmitting job')
         quit()
 
@@ -157,7 +158,7 @@ while not connected:
             connected = False
             attempt += 1
     else:
-        os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+        os.system('/globalhome/' + user + '/submit_scripts/submitting.sh 1')
         print('AutoReconnect failed, resubmitting job')
         quit()
 
@@ -173,7 +174,7 @@ while not connected:
             connected = False
             attempt += 1
     else:
-        os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+        os.system('/globalhome/' + user + '/submit_scripts/submitting.sh 1')
         print('AutoReconnect failed, resubmitting job')
         quit()
 
@@ -194,7 +195,7 @@ while n_delete < 1:
                     connected = False
                     attempt += 1
             else:
-                os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+                os.system('/globalhome/' + user + '/submit_scripts/submitting.sh 1')
                 print('AutoReconnect failed, resubmitting job')
                 quit()
 
@@ -210,7 +211,7 @@ while n_delete < 1:
                 connected = False
                 attempt += 1
         else:
-            os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+            os.system('/globalhome/' + user + '/submit_scripts/submitting.sh 1')
             print('AutoReconnect failed, resubmitting job')
             quit()
 
@@ -229,7 +230,7 @@ while n_delete < 1:
                     connected = False
                     attempt += 1
             else:
-                os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+                os.system('/globalhome/' + user + '/submit_scripts/submitting.sh 1')
                 print('AutoReconnect failed, resubmitting job')
                 quit()
 
@@ -248,7 +249,7 @@ while n_delete < 1:
                         connected = False
                         attempt += 1
             else:
-                os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+                os.system('/globalhome/' + user + '/submit_scripts/submitting.sh 1')
                 print('AutoReconnect failed, resubmitting job')
                 quit()
 
@@ -267,7 +268,7 @@ while n_delete < 1:
                 connected = False
                 attempt += 1
         else:
-            os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+            os.system('/globalhome/' + user + '/submit_scripts/submitting.sh 1')
             print('AutoReconnect failed, resubmitting job')
             quit()
 
@@ -308,7 +309,7 @@ while not connected:
             connected = False
             attempt += 1
     else:
-        os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+        os.system('/globalhome/' + user + '/submit_scripts/submitting.sh 1')
         print('AutoReconnect failed, resubmitting job')
         quit()
 
@@ -324,7 +325,7 @@ while not connected:
             connected = False
             attempt += 1
     else:
-        os.system('/globalhome/cbeeler/submit_scripts/submitting.sh 1')
+        os.system('/globalhome/' + user + '/submit_scripts/submitting.sh 1')
         print('AutoReconnect failed, resubmitting job')
         quit()
 
